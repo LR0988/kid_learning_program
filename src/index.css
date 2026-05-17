@@ -1,0 +1,221 @@
+:root {
+  --primary-color: #007aff; /* iOS Blue */
+  --bg-color: #f2f2f7; /* iOS System Grouped Background Light */
+  --text-primary: #000000;
+  --text-secondary: #8e8e93;
+  --card-bg: #ffffff;
+  --border-color: #c6c6c8;
+  --success: #34c759; /* iOS Green */
+  --danger: #ff3b30; /* iOS Red */
+  --warning: #ff9500; /* iOS Orange */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #0a84ff;
+    --bg-color: #000000; /* iOS System Grouped Background Dark */
+    --text-primary: #ffffff;
+    --text-secondary: #8e8e93;
+    --card-bg: #1c1c1e; /* iOS Secondary System Background */
+    --border-color: #38383a;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, p {
+  margin: 0;
+}
+
+/* App Container */
+.app-container {
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/* Top Navigation Bar */
+.ios-nav-bar {
+  background-color: var(--card-bg);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 0.5px solid var(--border-color);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.ios-nav-bar h1 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.ios-nav-bar .nav-actions {
+  display: flex;
+  gap: 16px;
+  margin-left: auto; /* Push to right */
+}
+
+.ios-nav-bar .nav-actions button {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 24px;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Inset Grouped List Sections */
+.ios-section {
+  margin: 20px 16px;
+}
+
+.ios-section-header {
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  margin-left: 16px;
+}
+
+.ios-list {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ios-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: var(--card-bg);
+  border-bottom: 0.5px solid var(--border-color);
+}
+
+.ios-list-item:last-child {
+  border-bottom: none;
+}
+
+/* Forms */
+.ios-form-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--card-bg);
+  border-bottom: 0.5px solid var(--border-color);
+}
+.ios-form-row:last-child {
+  border-bottom: none;
+}
+.ios-form-row label {
+  flex: 1;
+  font-size: 17px;
+}
+.ios-form-row input, .ios-form-row select {
+  flex: 2;
+  border: none;
+  background: transparent;
+  text-align: right;
+  font-size: 17px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+/* Buttons */
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  margin-top: 20px;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+
+/* Filter Bar (Capsules) */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  background-color: var(--card-bg);
+  border-bottom: 0.5px solid var(--border-color);
+}
+.filter-bar::-webkit-scrollbar {
+  display: none;
+}
+.filter-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: none;
+  font-size: 15px;
+  white-space: nowrap;
+  background-color: rgba(142, 142, 147, 0.15);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.filter-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 600;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--card-bg);
+  border-top: 0.5px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 24px 0; /* extra padding for iOS home indicator */
+  z-index: 100;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 10px;
+}
+
+.nav-item.active {
+  color: var(--primary-color);
+}
+
+.nav-item svg {
+  width: 24px;
+  height: 24px;
+}

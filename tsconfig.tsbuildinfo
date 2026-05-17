@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/addrecordmodal.tsx","./src/components/historyview.tsx","./src/components/settingsview.tsx","./src/components/statisticsview.tsx","./src/firebase/config.ts","./src/firebase/services.ts","./src/services/gemini.ts","./src/types/models.ts"],"errors":true,"version":"5.9.3"}
