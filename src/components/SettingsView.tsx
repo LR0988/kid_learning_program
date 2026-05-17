@@ -58,15 +58,6 @@ const SettingsView: React.FC = () => {
     setCategories(await fetchCategories());
   };
 
-  const handleAddAsset = async () => {
-    if (!newAssetName) return;
-    const newAsset: Asset = { id: newAssetName, name: newAssetName, unit: newAssetUnit, isStock, symbol: '', lastPrice: 1, lastUpdated: new Date() };
-    await saveAsset(newAsset);
-    setNewAssetName('');
-    setNewAssetUnit('');
-    setAssets(await fetchAssets());
-  };
-
   const handleDeleteAsset = async (name: string) => {
     if (window.confirm("Delete this asset?")) {
       await deleteAsset(name);
@@ -178,7 +169,7 @@ const SettingsView: React.FC = () => {
           </div>
           {isStock && (
             <div className="ios-form-row">
-              <input type="text" placeholder="代號 (例如 2330)" value={newAssetName} onChange={(e) => {}} style={{ display: 'none' }} />
+              <input type="text" placeholder="代號 (例如 2330)" value={newAssetName} onChange={() => {}} style={{ display: 'none' }} />
               <input type="text" placeholder="代號 (例如 2330)" id="symbol-input" style={{ textAlign: 'left', width: '100%' }} />
             </div>
           )}
