@@ -64,10 +64,10 @@ const StatisticsView: React.FC = () => {
     for (const asset of stocksToUpdate) {
       try {
         const symbol = /^\d+$/.test(asset.symbol) ? `${asset.symbol}.TW` : asset.symbol;
-        const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=1d`;
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
         
-        const res = await fetch(proxyUrl);
+        // Use our own Vercel API instead of a public proxy that blocks requests
+        const targetUrl = `/api/stock?symbol=${encodeURIComponent(symbol)}`;
+        const res = await fetch(targetUrl);
         const data = await res.json();
         const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
 
