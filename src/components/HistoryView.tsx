@@ -8,6 +8,7 @@ const HistoryView: React.FC = () => {
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<AssetRecord | null>(null);
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
 
   const loadData = async () => {
@@ -36,6 +37,11 @@ const HistoryView: React.FC = () => {
     }
   };
 
+  const handleEdit = (record: AssetRecord) => {
+    setEditingRecord(record);
+    setShowAddModal(true);
+  };
+
   const filteredRecords = selectedChild 
     ? records.filter(r => r.childName === selectedChild)
     : records;
@@ -56,7 +62,7 @@ const HistoryView: React.FC = () => {
         <h1>資產紀錄表</h1>
         <div className="nav-actions">
           <button onClick={() => alert("Voice input not hooked up yet")}>🎙</button>
-          <button onClick={() => setShowAddModal(true)}>+</button>
+          <button onClick={() => { setEditingRecord(null); setShowAddModal(true); }}>+</button>
         </div>
       </header>
 
@@ -126,6 +132,12 @@ const HistoryView: React.FC = () => {
                       </div>
                       
                       <button 
+                        onClick={() => handleEdit(record)} 
+                        style={{ background: 'none', border: 'none', color: 'var(--primary-color)', padding: '5px' }}
+                      >
+                        ✏️
+                      </button>
+                      <button 
                         onClick={() => handleDelete(record.firebaseID)} 
                         style={{ background: 'none', border: 'none', color: 'var(--danger)', padding: '5px' }}
                       >
@@ -141,7 +153,7 @@ const HistoryView: React.FC = () => {
         </div>
       )}
 
-      {showAddModal && <AddRecordModal onClose={() => setShowAddModal(false)} onSaved={loadData} />}
+      {showAddModal && <AddRecordModal onClose={() => { setShowAddModal(false); setEditingRecord(null); }} onSaved={loadData} recordToEdit={editingRecord} />}
     </div>
   );
 };

@@ -5,14 +5,15 @@ import { AssetRecord, Child, Asset, RecordReason } from '../types/models';
 interface Props {
   onClose: () => void;
   onSaved: () => void;
+  recordToEdit?: AssetRecord | null;
 }
 
-const AddRecordModal: React.FC<Props> = ({ onClose, onSaved }) => {
+const AddRecordModal: React.FC<Props> = ({ onClose, onSaved, recordToEdit }) => {
   const [children, setChildren] = useState<Child[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [reasons, setReasons] = useState<RecordReason[]>([]);
 
-  const [selectedChild, setSelectedChild] = useState('');
+  const [selectedChildren, setSelectedChildren] = useState<string[]>([]);
   const [selectedAsset, setSelectedAsset] = useState('');
   const [selectedReason, setSelectedReason] = useState('');
   const [amount, setAmount] = useState<string>('');
@@ -29,28 +30,51 @@ const AddRecordModal: React.FC<Props> = ({ onClose, onSaved }) => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (recordToEdit) {
+      setSelectedChildren([recordToEdit.childName]);
+      setSelectedAsset(recordToEdit.assetName);
+      setSelectedReason(recordToEdit.reasonName);
+      setAmount(Math.abs(recordToEdit.amount).toString());
+      setRecordType(recordToEdit.amount >= 0 ? 1 : -1);
+      setComment(recordToEdit.parentComment || '');
+      setDate(recordToEdit.date.toISOString().split('T')[0]);
+    }
+  }, [recordToEdit]);
+
   const handleSave = async () => {
-    if (!selectedChild || !selectedAsset || !selectedReason) {
-      alert("請填寫完整資訊！");
+    if (selectedChildren.length === 0 || !selectedAsset || !selectedReason) {
+      alert("請選擇至少一位小朋友，並填寫事由與資產！");
       return;
     }
     
     const numAmount = (parseFloat(amount) || 0) * recordType;
 
-    const newRecord: AssetRecord = {
-      firebaseID: '',
-      date: new Date(date),
-      moodRating: 3,
-      parentComment: comment,
-      amount: numAmount,
-      childName: selectedChild,
-      reasonName: selectedReason,
-      assetName: selectedAsset
-    };
-
-    await saveAssetRecord(newRecord);
+    for (const childName of selectedChildren) {
+      const newRecord: AssetRecord = {
+        firebaseID: recordToEdit ? recordToEdit.firebaseID : '',
+        date: new Date(date),
+        moodRating: 3,
+        parentComment: comment,
+        amount: numAmount,
+        childName: childName,
+        reasonName: selectedReason,
+        assetName: selectedAsset
+      };
+      await saveAssetRecord(newRecord);
+    }
+    
     onSaved();
     onClose();
+  };
+
+  const toggleChild = (name: string) => {
+    if (recordToEdit) return; // Disable multi-select if editing
+    if (selectedChildren.includes(name)) {
+      setSelectedChildren(selectedChildren.filter(c => c !== name));
+    } else {
+      setSelectedChildren([...selectedChildren, name]);
+    }
   };
 
   return (
@@ -59,7 +83,9 @@ const AddRecordModal: React.FC<Props> = ({ onClose, onSaved }) => {
         
         <header className="ios-nav-bar" style={{ position: 'relative', background: 'var(--bg-color)', borderBottom: 'none' }}>
           <button onClick={onClose} style={{ position: 'absolute', left: 16, color: 'var(--primary-color)', background: 'none', border: 'none', fontSize: '17px' }}>取消</button>
-          <h1 style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', margin: 0 }}>新增紀錄</h1>
+          <h1 style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', margin: 0 }}>
+            {recordToEdit ? '編輯紀錄' : '新增紀錄'}
+          </h1>
           <button onClick={handleSave} style={{ position: 'absolute', right: 16, color: 'var(--primary-color)', fontWeight: 'bold', background: 'none', border: 'none', fontSize: '17px' }}>儲存</button>
         </header>
 
@@ -71,12 +97,28 @@ const AddRecordModal: React.FC<Props> = ({ onClose, onSaved }) => {
                 <label>日期</label>
                 <input type="date" value={date} onChange={e => setDate(e.target.value)} />
               </div>
-              <div className="ios-form-row">
-                <label>小朋友</label>
-                <select value={selectedChild} onChange={e => setSelectedChild(e.target.value)}>
-                  <option value="">請選擇</option>
-                  {children.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                </select>
+              <div className="ios-form-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                <label style={{ marginBottom: '8px' }}>小朋友 (可複選)</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {children.map(c => (
+                    <button
+                      key={c.name}
+                      onClick={() => toggleChild(c.name)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        border: 'none',
+                        fontSize: '15px',
+                        cursor: recordToEdit ? 'default' : 'pointer',
+                        opacity: recordToEdit && !selectedChildren.includes(c.name) ? 0.5 : 1,
+                        background: selectedChildren.includes(c.name) ? 'var(--primary-color)' : 'rgba(142, 142, 147, 0.15)',
+                        color: selectedChildren.includes(c.name) ? '#fff' : 'var(--text-primary)'
+                      }}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
