@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 
 // Replace these values with your actual Firebase Web Config from the Firebase Console
 const firebaseConfig = {
@@ -12,6 +12,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// 啟用 ignoreUndefinedProperties: true，避免物件中含有 undefined 屬性時 Firestore 丟出致命錯誤
+const db = initializeFirestore(app, {
+    ignoreUndefinedProperties: true
+});
 
 export { app, db };

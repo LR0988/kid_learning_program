@@ -97,9 +97,14 @@ const RecurringRuleModal: React.FC<Props> = ({ onClose, onSaved, ruleToEdit }) =
       comment: comment.trim()
     };
 
-    await saveRecurringRule(rule);
-    onSaved();
-    onClose();
+    try {
+      await saveRecurringRule(rule);
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      console.error('Save recurring rule error:', err);
+      alert('儲存週期規則失敗：' + (err.message || '未知錯誤'));
+    }
   };
 
   return (

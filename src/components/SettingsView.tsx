@@ -11,7 +11,8 @@ import {
   fetchRecurringRules,
   saveRecurringRule,
   deleteRecurringRule,
-  checkAndExecuteRecurringRules
+  checkAndExecuteRecurringRules,
+  executeSingleRecurringRule
 } from '../firebase/services';
 import { Child, ReasonCategory, Asset, RecurringRule } from '../types/models';
 import RecurringRuleModal from './RecurringRuleModal';
@@ -111,6 +112,20 @@ const SettingsView: React.FC<Props> = ({ onLogout }) => {
     }
   };
 
+  const handleExecuteSingle = async (rule: RecurringRule) => {
+    const targetNames = rule.childNames?.join('、') || '小朋友';
+    if (!window.confirm(`確定要立即為「${targetNames}」發放「${rule.title}」($${rule.amount}) 嗎？`)) {
+      return;
+    }
+    try {
+      const res = await executeSingleRecurringRule(rule);
+      alert(`✅ 已成功執行！為 ${res.executedCount} 位小朋友完成「${res.title}」發放！`);
+      loadData();
+    } catch (e: any) {
+      alert('❌ 發放失敗：' + (e.message || '未知錯誤'));
+    }
+  };
+
   const handleManualCheck = async (force: boolean = false) => {
     setIsExecutingCheck(true);
     setCheckResultMsg('');
@@ -119,7 +134,10 @@ const SettingsView: React.FC<Props> = ({ onLogout }) => {
       if (result.executedCount > 0) {
         setCheckResultMsg(`✅ 成功分派 ${result.executedCount} 筆款項 (${result.titles.join(', ')})！`);
       } else {
-        setCheckResultMsg('ℹ️ 目前沒有符合或待發放的週期規則 (今天已全數發放過)。');
+        const details = result.skippedDetails && result.skippedDetails.length > 0 
+          ? ` (${result.skippedDetails.join('；')})` 
+          : ' (今日未達發放日或已發放過)';
+        setCheckResultMsg(`ℹ️ 今日無需分派${details}。若要立即發放，可點擊規則旁的「立即發放」按鈕。`);
       }
       loadData();
     } catch (e: any) {
@@ -180,6 +198,13 @@ const SettingsView: React.FC<Props> = ({ onLogout }) => {
                     ⏰ {formatFrequency(rule)} · 👦 {rule.childNames?.join('、') || '無對象'} ({rule.assetName || '現金'})
                   </span>
                   <div style={{ display: 'flex', gap: '12px' }}>
+                    <button 
+                      type="button"
+                      onClick={() => handleExecuteSingle(rule)} 
+                      style={{ background: 'none', border: 'none', color: 'var(--success)', fontSize: '13px', cursor: 'pointer', padding: 0, fontWeight: '600' }}
+                    >
+                      ▶️ 立即發放
+                    </button>
                     <button 
                       type="button"
                       onClick={() => handleToggleRule(rule)} 
