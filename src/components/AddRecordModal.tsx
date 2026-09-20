@@ -23,9 +23,17 @@ const AddRecordModal: React.FC<Props> = ({ onClose, onSaved, recordToEdit }) => 
 
   useEffect(() => {
     const loadData = async () => {
-      setChildren(await fetchChildren());
-      setAssets(await fetchAssets());
-      setReasons(await fetchReasons());
+      const [cList, aList, rList] = await Promise.all([
+        fetchChildren(),
+        fetchAssets(),
+        fetchReasons()
+      ]);
+      setChildren(cList);
+      setAssets(aList);
+      setReasons(rList);
+
+      if (aList.length > 0 && !selectedAsset) setSelectedAsset(aList[0].name);
+      if (rList.length > 0 && !selectedReason) setSelectedReason(rList[0].name);
     };
     loadData();
   }, []);
@@ -81,15 +89,15 @@ const AddRecordModal: React.FC<Props> = ({ onClose, onSaved, recordToEdit }) => 
     <div style={modalOverlayStyle}>
       <div style={modalStyle}>
         
-        <header className="ios-nav-bar" style={{ position: 'relative', background: 'var(--bg-color)', borderBottom: 'none' }}>
-          <button onClick={onClose} style={{ position: 'absolute', left: 16, color: 'var(--primary-color)', background: 'none', border: 'none', fontSize: '17px' }}>取消</button>
-          <h1 style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', margin: 0 }}>
+        <header className="ios-nav-bar" style={{ position: 'relative', background: 'var(--card-bg)', borderBottom: 'none' }}>
+          <button type="button" onClick={onClose} style={{ position: 'absolute', left: 16, color: 'var(--primary-color)', background: 'none', border: 'none', fontSize: '17px' }}>取消</button>
+          <h1 style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', margin: 0, fontSize: '17px' }}>
             {recordToEdit ? '編輯紀錄' : '新增紀錄'}
           </h1>
-          <button onClick={handleSave} style={{ position: 'absolute', right: 16, color: 'var(--primary-color)', fontWeight: 'bold', background: 'none', border: 'none', fontSize: '17px' }}>儲存</button>
+          <button type="button" onClick={handleSave} style={{ position: 'absolute', right: 16, color: 'var(--primary-color)', fontWeight: 'bold', background: 'none', border: 'none', fontSize: '17px' }}>儲存</button>
         </header>
 
-        <div style={{ overflowY: 'auto', flex: 1 }}>
+        <div style={{ overflowY: 'auto', flex: 1, paddingBottom: '30px' }}>
           <div className="ios-section">
             <div className="ios-section-header">對象與日期</div>
             <div className="ios-list">
@@ -103,15 +111,16 @@ const AddRecordModal: React.FC<Props> = ({ onClose, onSaved, recordToEdit }) => 
                   {children.map(c => (
                     <button
                       key={c.name}
+                      type="button"
                       onClick={() => toggleChild(c.name)}
                       style={{
-                        padding: '8px 16px',
+                        padding: '6px 14px',
                         borderRadius: '20px',
                         border: 'none',
-                        fontSize: '15px',
+                        fontSize: '14px',
                         cursor: recordToEdit ? 'default' : 'pointer',
                         opacity: recordToEdit && !selectedChildren.includes(c.name) ? 0.5 : 1,
-                        background: selectedChildren.includes(c.name) ? 'var(--primary-color)' : 'rgba(142, 142, 147, 0.15)',
+                        background: selectedChildren.includes(c.name) ? 'var(--primary-color)' : 'var(--card-sub-bg)',
                         color: selectedChildren.includes(c.name) ? '#fff' : 'var(--text-primary)'
                       }}
                     >
@@ -140,9 +149,21 @@ const AddRecordModal: React.FC<Props> = ({ onClose, onSaved, recordToEdit }) => 
             <div className="ios-section-header">資產變動</div>
             <div className="ios-list">
               <div className="ios-form-row" style={{ justifyContent: 'center' }}>
-                <div style={{ display: 'flex', background: 'rgba(142,142,147,0.12)', borderRadius: '8px', padding: '2px', width: '100%' }}>
-                  <button onClick={() => setRecordType(1)} style={{ flex: 1, padding: '6px', border: 'none', background: recordType === 1 ? 'var(--card-bg)' : 'transparent', borderRadius: '6px', boxShadow: recordType === 1 ? '0 3px 1px rgba(0,0,0,0.04)' : 'none' }}>獎勵(+)</button>
-                  <button onClick={() => setRecordType(-1)} style={{ flex: 1, padding: '6px', border: 'none', background: recordType === -1 ? 'var(--card-bg)' : 'transparent', borderRadius: '6px', boxShadow: recordType === -1 ? '0 3px 1px rgba(0,0,0,0.04)' : 'none' }}>扣除(-)</button>
+                <div style={{ display: 'flex', background: 'var(--card-sub-bg)', borderRadius: '8px', padding: '2px', width: '100%' }}>
+                  <button 
+                    type="button"
+                    onClick={() => setRecordType(1)} 
+                    style={{ flex: 1, padding: '6px', border: 'none', background: recordType === 1 ? 'var(--card-bg)' : 'transparent', borderRadius: '6px', boxShadow: recordType === 1 ? '0 3px 1px rgba(0,0,0,0.04)' : 'none', color: 'var(--text-primary)', fontWeight: recordType === 1 ? 'bold' : 'normal' }}
+                  >
+                    獎勵(+)
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setRecordType(-1)} 
+                    style={{ flex: 1, padding: '6px', border: 'none', background: recordType === -1 ? 'var(--card-bg)' : 'transparent', borderRadius: '6px', boxShadow: recordType === -1 ? '0 3px 1px rgba(0,0,0,0.04)' : 'none', color: 'var(--text-primary)', fontWeight: recordType === -1 ? 'bold' : 'normal' }}
+                  >
+                    扣除(-)
+                  </button>
                 </div>
               </div>
               <div className="ios-form-row">
@@ -154,7 +175,13 @@ const AddRecordModal: React.FC<Props> = ({ onClose, onSaved, recordToEdit }) => 
               </div>
               <div className="ios-form-row">
                 <label>數量</label>
-                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.0" />
+                <input 
+                  type="text" 
+                  inputMode="decimal"
+                  value={amount} 
+                  onChange={e => setAmount(e.target.value)} 
+                  placeholder="0.0" 
+                />
               </div>
             </div>
           </div>
@@ -167,7 +194,7 @@ const AddRecordModal: React.FC<Props> = ({ onClose, onSaved, recordToEdit }) => 
                   value={comment} 
                   onChange={e => setComment(e.target.value)} 
                   placeholder="請輸入細節..." 
-                  style={{ width: '100%', height: '100px', border: 'none', background: 'transparent', outline: 'none', fontSize: '17px', resize: 'none', fontFamily: 'inherit' }}
+                  style={{ width: '100%', height: '80px', border: 'none', background: 'transparent', outline: 'none', fontSize: '16px', resize: 'none', fontFamily: 'inherit' }}
                 />
               </div>
             </div>
@@ -187,11 +214,12 @@ const modalOverlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  height: '90%', width: '100%',
+  height: '92%', width: '100%',
   backgroundColor: 'var(--bg-color)',
   borderTopLeftRadius: '16px', borderTopRightRadius: '16px',
   display: 'flex', flexDirection: 'column',
-  overflow: 'hidden'
+  overflow: 'hidden',
+  paddingBottom: 'env(safe-area-inset-bottom)'
 };
 
 export default AddRecordModal;

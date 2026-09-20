@@ -3,7 +3,12 @@ import { fetchRecords, fetchChildren, deleteRecord } from '../firebase/services'
 import { AssetRecord, Child } from '../types/models';
 import AddRecordModal from './AddRecordModal';
 
-const HistoryView: React.FC = () => {
+interface Props {
+  bannerMessage?: string | null;
+  onDismissBanner?: () => void;
+}
+
+const HistoryView: React.FC<Props> = ({ bannerMessage, onDismissBanner }) => {
   const [records, setRecords] = useState<AssetRecord[]>([]);
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,10 +33,10 @@ const HistoryView: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [bannerMessage]);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this record?")) {
+    if (window.confirm("確定要刪除這筆紀錄嗎？")) {
       await deleteRecord(id);
       loadData();
     }
@@ -61,14 +66,30 @@ const HistoryView: React.FC = () => {
       <header className="ios-nav-bar">
         <h1>資產紀錄表</h1>
         <div className="nav-actions">
-          <button onClick={() => alert("Voice input not hooked up yet")}>🎙</button>
-          <button onClick={() => { setEditingRecord(null); setShowAddModal(true); }}>+</button>
+          <button type="button" onClick={() => { setEditingRecord(null); setShowAddModal(true); }}>+</button>
         </div>
       </header>
+
+      {/* 自動發放提示橫幅 */}
+      {bannerMessage && (
+        <div className="ios-banner">
+          <div>{bannerMessage}</div>
+          {onDismissBanner && (
+            <button 
+              type="button"
+              onClick={onDismissBanner} 
+              style={{ background: 'none', border: 'none', color: 'inherit', fontSize: '18px', cursor: 'pointer', padding: '0 4px', fontWeight: 'bold' }}
+            >
+              ×
+            </button>
+          )}
+        </div>
+      )}
 
       {children.length > 0 && (
         <div className="filter-bar">
           <button 
+            type="button"
             className={`filter-btn ${selectedChild === null ? 'active' : ''}`}
             onClick={() => setSelectedChild(null)}
           >
@@ -76,6 +97,7 @@ const HistoryView: React.FC = () => {
           </button>
           {children.map(child => (
             <button 
+              type="button"
               key={child.name}
               className={`filter-btn ${selectedChild === child.name ? 'active' : ''}`}
               onClick={() => setSelectedChild(child.name)}
@@ -87,12 +109,12 @@ const HistoryView: React.FC = () => {
       )}
 
       {loading ? (
-        <div style={{ textAlign: 'center', marginTop: '40px', color: 'var(--text-secondary)' }}>Loading...</div>
+        <div style={{ textAlign: 'center', marginTop: '40px', color: 'var(--text-secondary)' }}>載入中...</div>
       ) : filteredRecords.length === 0 ? (
         <div style={{ textAlign: 'center', marginTop: '80px', color: 'var(--text-secondary)' }}>
           <div style={{ fontSize: '48px', marginBottom: '10px' }}>📁</div>
           <h3>尚無紀錄</h3>
-          <p>點擊右上角「+」開始新增第一筆紀錄！</p>
+          <p style={{ marginTop: '6px', fontSize: '14px' }}>點擊右上角「+」開始新增第一筆紀錄！</p>
         </div>
       ) : (
         <div>
@@ -116,7 +138,14 @@ const HistoryView: React.FC = () => {
                     {/* Middle Info */}
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: '600', fontSize: '16px' }}>{record.childName}</div>
-                      <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>{record.reasonName}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                        {record.reasonName}
+                        {record.parentComment && record.parentComment.startsWith('[定期分派]') ? (
+                          <span style={{ marginLeft: '6px', color: 'var(--primary-color)', fontSize: '12px' }}>
+                            (週期發放)
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
 
                     {/* Right Amount */}
@@ -132,14 +161,18 @@ const HistoryView: React.FC = () => {
                       </div>
                       
                       <button 
+                        type="button"
                         onClick={() => handleEdit(record)} 
-                        style={{ background: 'none', border: 'none', color: 'var(--primary-color)', padding: '5px' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--primary-color)', padding: '5px', fontSize: '16px', cursor: 'pointer' }}
+                        title="編輯"
                       >
                         ✏️
                       </button>
                       <button 
+                        type="button"
                         onClick={() => handleDelete(record.firebaseID)} 
-                        style={{ background: 'none', border: 'none', color: 'var(--danger)', padding: '5px' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--danger)', padding: '5px', fontSize: '16px', cursor: 'pointer' }}
+                        title="刪除"
                       >
                         🗑
                       </button>
@@ -153,7 +186,13 @@ const HistoryView: React.FC = () => {
         </div>
       )}
 
-      {showAddModal && <AddRecordModal onClose={() => { setShowAddModal(false); setEditingRecord(null); }} onSaved={loadData} recordToEdit={editingRecord} />}
+      {showAddModal && (
+        <AddRecordModal 
+          onClose={() => { setShowAddModal(false); setEditingRecord(null); }} 
+          onSaved={loadData} 
+          recordToEdit={editingRecord} 
+        />
+      )}
     </div>
   );
 };

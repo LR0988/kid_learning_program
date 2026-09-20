@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38ef7d"/>
+      <stop offset="100%" stop-color="#11998e"/>
+    </linearGradient>
+    <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE000"/>
+      <stop offset="100%" stop-color="#799F0C"/>
+    </linearGradient>
+    <linearGradient id="pigGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF9A8B"/>
+      <stop offset="100%" stop-color="#FF6A88"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- iOS App Icon Squircle Background -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
+
+  <g filter="url(#shadow)">
+    <!-- Cute Piggy Bank Body -->
+    <ellipse cx="256" cy="285" rx="145" ry="125" fill="url(#pigGrad)"/>
+    
+    <!-- Ears -->
+    <path d="M165 190 C155 130 185 135 205 180 Z" fill="#FF6A88"/>
+    <path d="M172 185 C165 145 185 145 198 178 Z" fill="#FFAAA6"/>
+
+    <!-- Snout -->
+    <ellipse cx="135" cy="290" rx="36" ry="26" fill="#FFAAA6"/>
+    <circle cx="125" cy="290" r="6" fill="#D85A75"/>
+    <circle cx="145" cy="290" r="6" fill="#D85A75"/>
+
+    <!-- Eye -->
+    <circle cx="205" cy="245" r="10" fill="#2C3E50"/>
+    <circle cx="208" cy="242" r="3.5" fill="#FFFFFF"/>
+
+    <!-- Legs -->
+    <rect x="180" y="375" width="34" height="42" rx="12" fill="#D85A75"/>
+    <rect x="290" y="375" width="34" height="42" rx="12" fill="#D85A75"/>
+
+    <!-- Tail -->
+    <path d="M400 280 Q430 265 415 295 Q425 310 405 305" fill="none" stroke="#FF6A88" stroke-width="12" stroke-linecap="round"/>
+
+    <!-- Coin Slot -->
+    <rect x="235" y="155" width="45" height="12" rx="6" fill="#D85A75"/>
+
+    <!-- Golden Coin Dropping In -->
+    <circle cx="256" cy="125" r="46" fill="#FFD700" stroke="#E5A93C" stroke-width="6"/>
+    <circle cx="256" cy="125" r="34" fill="none" stroke="#E5A93C" stroke-width="3" stroke-dasharray="6,4"/>
+    <text x="256" y="137" font-size="34" font-family="-apple-system, system-ui, sans-serif" font-weight="900" text-anchor="middle" fill="#B37D14">$</text>
+  </g>
+</svg>
