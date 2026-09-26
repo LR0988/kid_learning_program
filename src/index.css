@@ -1,29 +1,37 @@
 :root {
   --primary-color: #007aff; /* iOS Blue */
-  --bg-color: #f2f2f7; /* iOS System Grouped Background Light */
-  --text-primary: #000000;
+  --bg-color: #f2f4f8; /* 現代 iOS 柔和分組背景色 */
+  --text-primary: #1c1c1e;
   --text-secondary: #8e8e93;
+  --text-tertiary: #c7c7cc;
   --card-bg: #ffffff;
-  --border-color: #c6c6c8;
+  --card-sub-bg: rgba(142, 142, 147, 0.1);
+  --border-color: rgba(60, 60, 67, 0.12);
   --success: #34c759; /* iOS Green */
+  --success-bg: rgba(52, 199, 89, 0.12);
   --danger: #ff3b30; /* iOS Red */
+  --danger-bg: rgba(255, 59, 48, 0.12);
   --warning: #ff9500; /* iOS Orange */
-  --card-sub-bg: rgba(142, 142, 147, 0.12);
+  --warning-bg: rgba(255, 149, 0, 0.12);
+  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  --active-scale: 0.985;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --primary-color: #0a84ff;
-    --bg-color: #000000; /* iOS System Grouped Background Dark */
+    --bg-color: #0c0c0e; /* 深邃質感深色背景 */
     --text-primary: #ffffff;
     --text-secondary: #8e8e93;
-    --card-bg: #1c1c1e; /* iOS Secondary System Background */
-    --border-color: #38383a;
-    --card-sub-bg: rgba(255, 255, 255, 0.1);
+    --text-tertiary: #48484a;
+    --card-bg: #1c1c1e; /* iOS 深色卡片底色 */
+    --card-sub-bg: rgba(255, 255, 255, 0.08);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   }
 }
 
-/* 全域原生觸控防禦：移除瀏覽器藍色反白、選取框與點擊灰底 */
+/* 全域原生觸控防禦：移除瀏覽器反白與點擊灰色方框 */
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
@@ -38,14 +46,13 @@ body {
   -webkit-font-smoothing: antialiased;
   user-select: none;
   -webkit-user-select: none;
-  overscroll-behavior-y: none; /* 防止整頁像普通網頁般隨意橡皮筋拉扯 */
+  overscroll-behavior-y: none;
 }
 
 h1, h2, h3, h4, p {
   margin: 0;
 }
 
-/* 確保輸入框保留選取文字能力，且字級至少 16px 避免 iOS Safari 自動放大 */
 input, textarea, select {
   user-select: auto;
   -webkit-user-select: auto;
@@ -53,15 +60,15 @@ input, textarea, select {
   font-family: inherit;
 }
 
-/* App 主容器：適配底部安全邊界 (Home Indicator) */
+/* 主容器：適配 iPhone 底部安全邊界 */
 .app-container {
-  max-width: 800px;
+  max-width: 600px; /* 手機最適寬度 */
   margin: 0 auto;
   min-height: 100vh;
-  padding-bottom: calc(85px + env(safe-area-inset-bottom));
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
 }
 
-/* 頂部導航列：動態融入 iPhone 瀏海與動態島 (Dynamic Island) */
+/* 頂部導航列：動態避開 iPhone 瀏海與動態島 (Dynamic Island) */
 .ios-nav-bar {
   background-color: var(--card-bg);
   padding-top: calc(14px + env(safe-area-inset-top));
@@ -90,8 +97,9 @@ input, textarea, select {
 
 .ios-nav-bar .nav-actions {
   display: flex;
-  gap: 16px;
-  margin-left: auto; /* Push to right */
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
 }
 
 .ios-nav-bar .nav-actions button {
@@ -99,38 +107,47 @@ input, textarea, select {
   border: none;
   color: var(--primary-color);
   font-size: 20px;
-  padding: 4px;
+  padding: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
 }
 
-/* Inset Grouped List Sections */
+.ios-nav-bar .nav-actions button:active {
+  opacity: 0.6;
+}
+
+/* 頁面分組與區塊 */
 .ios-section {
-  margin: 20px 16px;
+  margin: 16px;
 }
 
 .ios-section-header {
   font-size: 13px;
+  font-weight: 600;
   text-transform: uppercase;
   color: var(--text-secondary);
-  margin-bottom: 6px;
-  margin-left: 16px;
+  margin-bottom: 8px;
+  margin-left: 6px;
+  letter-spacing: 0.3px;
 }
 
+/* 經典列表與卡片 */
 .ios-list {
   background-color: var(--card-bg);
-  border-radius: 10px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--card-shadow);
+  border: 0.5px solid var(--border-color);
 }
 
 .ios-list-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 13px 16px;
   background-color: var(--card-bg);
   border-bottom: 0.5px solid var(--border-color);
 }
@@ -139,21 +156,55 @@ input, textarea, select {
   border-bottom: none;
 }
 
-/* Forms */
+/* 紀錄卡片 (獨立卡片式，大幅提升手機視覺呼吸感) */
+.record-card {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  background-color: var(--card-bg);
+  border-radius: 14px;
+  margin-bottom: 9px;
+  box-shadow: var(--card-shadow);
+  border: 0.5px solid var(--border-color);
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.record-card:active {
+  transform: scale(var(--active-scale));
+  opacity: 0.92;
+}
+
+.record-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+/* 表單列 */
 .ios-form-row {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 13px 16px;
   background-color: var(--card-bg);
   border-bottom: 0.5px solid var(--border-color);
 }
+
 .ios-form-row:last-child {
   border-bottom: none;
 }
+
 .ios-form-row label {
   flex: 1;
   font-size: 16px;
 }
+
 .ios-form-row input, .ios-form-row select {
   flex: 2;
   border: none;
@@ -164,55 +215,104 @@ input, textarea, select {
   outline: none;
 }
 
-/* Buttons */
+/* 主要按鈕 */
 .btn-primary {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   padding: 14px;
   background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 17px;
+  border-radius: 14px;
+  font-size: 16px;
   font-weight: 600;
   text-align: center;
   cursor: pointer;
-  margin-top: 20px;
-}
-.btn-primary:disabled {
-  opacity: 0.5;
+  box-shadow: 0 3px 10px rgba(0, 122, 255, 0.25);
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-/* Filter Bar (Capsules) */
+.btn-primary:active {
+  transform: scale(var(--active-scale));
+  opacity: 0.85;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+/* iOS 原生分段控制器 (Segmented Control) */
+.ios-segmented-control {
+  display: flex;
+  background-color: var(--card-sub-bg);
+  border-radius: 10px;
+  padding: 3px;
+  margin: 12px 16px;
+}
+
+.ios-segment-btn {
+  flex: 1;
+  padding: 7px 4px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.ios-segment-btn.active {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* 篩選標籤膠囊列 (Filter Capsules) */
 .filter-bar {
   display: flex;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   overflow-x: auto;
   background-color: var(--card-bg);
   border-bottom: 0.5px solid var(--border-color);
+  -webkit-overflow-scrolling: touch;
 }
+
 .filter-bar::-webkit-scrollbar {
   display: none;
 }
+
 .filter-btn {
-  padding: 6px 16px;
-  border-radius: 20px;
+  padding: 6px 14px;
+  border-radius: 18px;
   border: none;
-  font-size: 15px;
+  font-size: 14px;
   white-space: nowrap;
   background-color: var(--card-sub-bg);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
+
+.filter-btn:active {
+  transform: scale(0.95);
+}
+
 .filter-btn.active {
   background-color: var(--primary-color);
   color: white;
   font-weight: 600;
 }
 
-/* 底部導覽列：完美結合 iPhone 底部 Home Indicator 安全區域 */
+/* 底部導覽列 (TabBar) */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -227,8 +327,8 @@ input, textarea, select {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
   z-index: 100;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
 }
 
 .nav-item {
@@ -241,6 +341,7 @@ input, textarea, select {
   font-size: 11px;
   font-weight: 500;
   flex: 1;
+  padding: 2px 0;
 }
 
 .nav-item.active {
@@ -258,9 +359,9 @@ input, textarea, select {
   margin: 12px 16px;
   padding: 12px 16px;
   border-radius: 12px;
-  background-color: rgba(52, 199, 89, 0.15);
-  border: 1px solid rgba(52, 199, 89, 0.3);
-  color: #1e7e34;
+  background-color: var(--success-bg);
+  border: 1px solid rgba(52, 199, 89, 0.25);
+  color: var(--success);
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -268,16 +369,10 @@ input, textarea, select {
   animation: fadeIn 0.3s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  .ios-banner {
-    color: #4cd964;
-    background-color: rgba(52, 199, 89, 0.2);
-  }
-}
-
-/* 標籤 Tag / Badge */
+/* 小標籤 Badge & Pill */
 .ios-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: 3px 8px;
   border-radius: 6px;
   font-size: 11px;
@@ -287,8 +382,66 @@ input, textarea, select {
 }
 
 .ios-badge.active {
-  background-color: rgba(52, 199, 89, 0.15);
+  background-color: var(--success-bg);
   color: var(--success);
+}
+
+.ios-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  background-color: var(--card-sub-bg);
+  color: var(--text-secondary);
+}
+
+/* 統計專屬：個人資產卡片 (Portfolio Card) */
+.portfolio-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 18px 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--card-shadow);
+  border: 0.5px solid var(--border-color);
+}
+
+.portfolio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.portfolio-total-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.portfolio-total-val {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+/* 資產分佈進度條 */
+.asset-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background-color: var(--card-sub-bg);
+  overflow: hidden;
+  display: flex;
+  margin-bottom: 14px;
+}
+
+.asset-progress-segment {
+  height: 100%;
+  transition: width 0.3s ease;
 }
 
 @keyframes fadeIn {

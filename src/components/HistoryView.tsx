@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { fetchRecords, fetchChildren, deleteRecord } from '../firebase/services';
 import { AssetRecord, Child } from '../types/models';
 import AddRecordModal from './AddRecordModal';
@@ -7,6 +7,18 @@ interface Props {
   bannerMessage?: string | null;
   onDismissBanner?: () => void;
 }
+
+// 根據事由與類型智慧給予對應的 Emoji
+const getReasonEmoji = (reason: string, amount: number) => {
+  if (reason.includes('股票')) return '📈';
+  if (reason.includes('零用錢') || reason.includes('現金') || reason.includes('存')) return '💰';
+  if (reason.includes('書') || reason.includes('學') || reason.includes('功課') || reason.includes('作業')) return '📚';
+  if (reason.includes('咖啡') || reason.includes('家事') || reason.includes('幫忙')) return '☕';
+  if (reason.includes('電視') || reason.includes('遊戲') || reason.includes('玩')) return '🎮';
+  if (reason.includes('獎')) return '🌟';
+  if (amount < 0) return '🔻';
+  return '📝';
+};
 
 const HistoryView: React.FC<Props> = ({ bannerMessage, onDismissBanner }) => {
   const [records, setRecords] = useState<AssetRecord[]>([]);
@@ -35,7 +47,8 @@ const HistoryView: React.FC<Props> = ({ bannerMessage, onDismissBanner }) => {
     loadData();
   }, [bannerMessage]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // 阻止觸發整張卡片的編輯事件
     if (window.confirm("確定要刪除這筆紀錄嗎？")) {
       await deleteRecord(id);
       loadData();
@@ -47,30 +60,66 @@ const HistoryView: React.FC<Props> = ({ bannerMessage, onDismissBanner }) => {
     setShowAddModal(true);
   };
 
-  const filteredRecords = selectedChild 
-    ? records.filter(r => r.childName === selectedChild)
-    : records;
+  const filteredRecords = useMemo(() => {
+    return selectedChild 
+      ? records.filter(r => r.childName === selectedChild)
+      : records;
+  }, [records, selectedChild]);
 
-  // Group by date string (YYYY-MM-DD)
-  const groupedRecords = filteredRecords.reduce((groups, record) => {
-    const dateStr = record.date.toISOString().split('T')[0];
-    if (!groups[dateStr]) groups[dateStr] = [];
-    groups[dateStr].push(record);
-    return groups;
-  }, {} as Record<string, AssetRecord[]>);
+  // 統計摘要計算
+  const summary = useMemo(() => {
+    let income = 0;
+    let expense = 0;
+    filteredRecords.forEach(r => {
+      if (r.amount > 0) income += r.amount;
+      else expense += Math.abs(r.amount);
+    });
+    return {
+      income,
+      expense,
+      net: income - expense,
+      totalCount: filteredRecords.length
+    };
+  }, [filteredRecords]);
+
+  // 按日期分組 (YYYY-MM-DD)
+  const groupedRecords = useMemo(() => {
+    return filteredRecords.reduce((groups, record) => {
+      const dateStr = record.date.toISOString().split('T')[0];
+      if (!groups[dateStr]) groups[dateStr] = [];
+      groups[dateStr].push(record);
+      return groups;
+    }, {} as Record<string, AssetRecord[]>);
+  }, [filteredRecords]);
 
   const sortedDates = Object.keys(groupedRecords).sort().reverse();
 
   return (
     <div>
+      {/* 頂部導航列 */}
       <header className="ios-nav-bar">
         <h1>資產紀錄表</h1>
         <div className="nav-actions">
-          <button type="button" onClick={() => { setEditingRecord(null); setShowAddModal(true); }}>+</button>
+          <button 
+            type="button" 
+            onClick={() => { setEditingRecord(null); setShowAddModal(true); }}
+            style={{ 
+              backgroundColor: 'var(--primary-color)', 
+              color: '#fff', 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '50%',
+              fontSize: '20px',
+              fontWeight: '600'
+            }}
+            title="新增紀錄"
+          >
+            +
+          </button>
         </div>
       </header>
 
-      {/* 自動發放提示橫幅 */}
+      {/* 系統自動分派橫幅 */}
       {bannerMessage && (
         <div className="ios-banner">
           <div>{bannerMessage}</div>
@@ -86,6 +135,7 @@ const HistoryView: React.FC<Props> = ({ bannerMessage, onDismissBanner }) => {
         </div>
       )}
 
+      {/* 小朋友篩選膠囊列 */}
       {children.length > 0 && (
         <div className="filter-bar">
           <button 
@@ -93,7 +143,7 @@ const HistoryView: React.FC<Props> = ({ bannerMessage, onDismissBanner }) => {
             className={`filter-btn ${selectedChild === null ? 'active' : ''}`}
             onClick={() => setSelectedChild(null)}
           >
-            全部
+            全部對象 ({records.length})
           </button>
           {children.map(child => (
             <button 
@@ -102,90 +152,172 @@ const HistoryView: React.FC<Props> = ({ bannerMessage, onDismissBanner }) => {
               className={`filter-btn ${selectedChild === child.name ? 'active' : ''}`}
               onClick={() => setSelectedChild(child.name)}
             >
-              {child.name}
+              👦 {child.name}
             </button>
           ))}
         </div>
       )}
 
+      {/* 收支摘要速覽卡片 (Dashboard Summary Widget) */}
+      <div style={{ margin: '14px 16px 6px' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(0, 122, 255, 0.08) 0%, rgba(52, 199, 89, 0.08) 100%)',
+          borderRadius: '16px',
+          padding: '14px 16px',
+          border: '0.5px solid var(--border-color)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '3px', fontWeight: '500' }}>
+              {selectedChild ? `${selectedChild} 的結餘變動` : '整體收支變動'}
+            </div>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: summary.net >= 0 ? 'var(--success)' : 'var(--danger)', letterSpacing: '-0.5px' }}>
+              {summary.net >= 0 ? '+' : ''}{summary.net.toLocaleString()} 元
+            </div>
+          </div>
+          <div style={{ textAlign: 'right', display: 'flex', gap: '14px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '2px' }}>累計發放</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--success)' }}>
+                +${summary.income.toLocaleString()}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '2px' }}>累計扣除</div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--danger)' }}>
+                -${summary.expense.toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {loading ? (
-        <div style={{ textAlign: 'center', marginTop: '40px', color: 'var(--text-secondary)' }}>載入中...</div>
+        <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-secondary)', fontSize: '15px' }}>
+          讀取紀錄中...
+        </div>
       ) : filteredRecords.length === 0 ? (
-        <div style={{ textAlign: 'center', marginTop: '80px', color: 'var(--text-secondary)' }}>
-          <div style={{ fontSize: '48px', marginBottom: '10px' }}>📁</div>
-          <h3>尚無紀錄</h3>
-          <p style={{ marginTop: '6px', fontSize: '14px' }}>點擊右上角「+」開始新增第一筆紀錄！</p>
+        <div style={{ textAlign: 'center', marginTop: '60px', color: 'var(--text-secondary)' }}>
+          <div style={{ fontSize: '50px', marginBottom: '12px' }}>📁</div>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)' }}>尚無資產紀錄</h3>
+          <p style={{ marginTop: '6px', fontSize: '14px', color: 'var(--text-secondary)' }}>點擊右上角「+」即可快速記錄第一筆零用錢或獎勵！</p>
         </div>
       ) : (
-        <div>
+        <div style={{ marginTop: '8px' }}>
           {sortedDates.map(date => (
-            <div key={date} className="ios-section">
-              <div className="ios-section-header">{new Date(date).toLocaleDateString()}</div>
-              <div className="ios-list">
-                {groupedRecords[date].map(record => (
-                  <div key={record.firebaseID} className="ios-list-item">
-                    
-                    {/* Left Icon */}
-                    <div style={{
-                      width: '40px', height: '40px', borderRadius: '50%',
-                      backgroundColor: record.amount >= 0 ? 'rgba(52, 199, 89, 0.15)' : 'rgba(255, 59, 48, 0.15)',
-                      display: 'flex', justifyContent: 'center', alignItems: 'center',
-                      fontSize: '20px', marginRight: '12px'
-                    }}>
-                      📝
-                    </div>
+            <div key={date} style={{ margin: '14px 16px' }}>
+              {/* 日期分組標籤 */}
+              <div style={{ 
+                fontSize: '13px', 
+                fontWeight: '600', 
+                color: 'var(--text-secondary)', 
+                marginBottom: '8px', 
+                marginLeft: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span>📅 {new Date(date).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric', weekday: 'short' })}</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>({groupedRecords[date].length} 筆)</span>
+              </div>
 
-                    {/* Middle Info */}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '600', fontSize: '16px' }}>{record.childName}</div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                        {record.reasonName}
-                        {record.parentComment && record.parentComment.startsWith('[定期分派]') ? (
-                          <span style={{ marginLeft: '6px', color: 'var(--primary-color)', fontSize: '12px' }}>
-                            (週期發放)
-                          </span>
-                        ) : null}
+              {/* 紀錄卡片清單 (整張卡片點擊可直接編輯) */}
+              <div>
+                {groupedRecords[date].map(record => {
+                  const emoji = getReasonEmoji(record.reasonName, record.amount);
+                  const isPositive = record.amount >= 0;
+                  const isRecurring = record.parentComment && record.parentComment.startsWith('[定期分派]');
+
+                  return (
+                    <div 
+                      key={record.firebaseID} 
+                      className="record-card"
+                      onClick={() => handleEdit(record)}
+                    >
+                      {/* 左側：精美 Emoji 圖示盒 */}
+                      <div 
+                        className="record-icon-box"
+                        style={{
+                          backgroundColor: isPositive ? 'var(--success-bg)' : 'var(--danger-bg)',
+                          color: isPositive ? 'var(--success)' : 'var(--danger)'
+                        }}
+                      >
+                        {emoji}
                       </div>
-                    </div>
 
-                    {/* Right Amount */}
-                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div>
+                      {/* 中間：事由名稱、對象標籤、備註 */}
+                      <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
                         <div style={{ 
-                          fontWeight: 'bold', fontSize: '16px',
-                          color: record.amount >= 0 ? 'var(--success)' : 'var(--danger)'
+                          fontWeight: '600', 
+                          fontSize: '16px', 
+                          color: 'var(--text-primary)',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          marginBottom: '4px'
                         }}>
-                          {record.amount >= 0 ? '+' : ''}{record.amount}
+                          {record.reasonName}
                         </div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{record.assetName}</div>
-                      </div>
-                      
-                      <button 
-                        type="button"
-                        onClick={() => handleEdit(record)} 
-                        style={{ background: 'none', border: 'none', color: 'var(--primary-color)', padding: '5px', fontSize: '16px', cursor: 'pointer' }}
-                        title="編輯"
-                      >
-                        ✏️
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => handleDelete(record.firebaseID)} 
-                        style={{ background: 'none', border: 'none', color: 'var(--danger)', padding: '5px', fontSize: '16px', cursor: 'pointer' }}
-                        title="刪除"
-                      >
-                        🗑
-                      </button>
-                    </div>
 
-                  </div>
-                ))}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span className="ios-pill-tag">
+                            👦 {record.childName}
+                          </span>
+                          <span className="ios-pill-tag">
+                            {record.assetName || '現金'}
+                          </span>
+                          {isRecurring && (
+                            <span className="ios-badge active" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                              週期自動
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 右側：大金額與單一優雅刪除按鈕 */}
+                      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+                        <div style={{ 
+                          fontWeight: '700', 
+                          fontSize: '17px',
+                          color: isPositive ? 'var(--success)' : 'var(--danger)',
+                          letterSpacing: '-0.3px',
+                          marginBottom: '2px'
+                        }}>
+                          {isPositive ? '+' : ''}{record.amount.toLocaleString()}
+                        </div>
+
+                        <button 
+                          type="button"
+                          onClick={(e) => handleDelete(e, record.firebaseID)} 
+                          style={{ 
+                            background: 'none', 
+                            border: 'none', 
+                            color: 'var(--text-tertiary)', 
+                            padding: '4px 2px', 
+                            fontSize: '14px', 
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            opacity: 0.8
+                          }}
+                          title="刪除紀錄"
+                        >
+                          🗑
+                        </button>
+                      </div>
+
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* 新增/編輯彈窗 */}
       {showAddModal && (
         <AddRecordModal 
           onClose={() => { setShowAddModal(false); setEditingRecord(null); }} 
